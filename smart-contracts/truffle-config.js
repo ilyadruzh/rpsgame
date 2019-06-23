@@ -11,6 +11,11 @@ module.exports = {
       port: 8545,
       network_id: "24176"
     },
+    ganache: {
+      host: "127.0.0.1",
+      port: 7545,
+      network_id: "*"
+    },
     docker: {
       host: "rpsgame-geth",
       port: 8545,

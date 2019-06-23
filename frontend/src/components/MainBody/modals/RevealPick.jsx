@@ -1,6 +1,6 @@
 import {Button, Modal, ModalHeader, ModalBody, ModalFooter, Input} from 'reactstrap';
 import React, {Component} from 'react';
-import {hexToNumberString, soliditySha3, asciiToHex} from "web3-utils";
+import {hexToNumberString, soliditySha3, asciiToHex, fromAscii} from "web3-utils";
 import axios from "axios";
 import web3 from 'web3';
 import randomBytes from 'randombytes';
@@ -24,7 +24,7 @@ class RevealPick extends Component {
     handleChange = (e) => {
         this.setState({
             [e.target.name]: e.target.value
-        }, () => console.log(this.state))
+        })
     };
 
     toggle = () => {
@@ -37,14 +37,17 @@ class RevealPick extends Component {
         const {label, gameId, instance, playerRevealedPick} = this.props;
         const {pick, secret} = this.state;
 
-        const seed = soliditySha3({type: 'bytes32', value: asciiToHex(secret)});
-        const encryptedPick = soliditySha3({type: 'uint', value: pick}, {type: 'bytes32', value: seed});
+        // const seed = soliditySha3({type: 'bytes32', value: asciiToHex(secret)});
+        // const encryptedPick = soliditySha3({type: 'uint', value: pick}, {type: 'bytes32', value: seed});
+
+        console.log(pick);
+        console.log(fromAscii(secret))
 
         this.setState({ isLoading: true });
 
         instance.methods
-            .revealPick(gameId, pick, secret)
-            .send({from: window.localStorage.getItem("current_eth_address"), value: 2000000000000000})
+            .revealPick(gameId, pick, fromAscii(secret))
+            .send({from: window.localStorage.getItem("current_eth_address")})
             .then(result => {
                 console.log("result: ", result);
                 playerRevealedPick(label);

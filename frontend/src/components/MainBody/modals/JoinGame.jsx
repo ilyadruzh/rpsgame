@@ -1,6 +1,6 @@
 import {Button, Modal, ModalHeader, ModalBody, ModalFooter, Input} from 'reactstrap';
 import React, {Component} from 'react';
-import { soliditySha3, asciiToHex} from "web3-utils";
+import {soliditySha3, asciiToHex, fromAscii} from "web3-utils";
 import './Loading.css';
 
 class JoinGame extends Component {
@@ -32,7 +32,10 @@ class JoinGame extends Component {
         const {instance, gameReady, gameId} = this.props;
         const {pick, secret} = this.state;
 
-        const seed = soliditySha3({type: 'bytes32', value: asciiToHex(secret)});
+        console.log(pick);
+        console.log(fromAscii(secret))
+
+        const seed = soliditySha3({type: 'bytes32', value: fromAscii(secret)});
         const encryptedPick = soliditySha3({type: 'uint', value: pick}, {type: 'bytes32', value: seed});
 
         this.setState({ isLoading: true });

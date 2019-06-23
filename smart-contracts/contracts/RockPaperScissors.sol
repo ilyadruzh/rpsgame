@@ -55,8 +55,8 @@ contract RockPaperScissors {
 
     constructor() public payable {}
 
-    /// Create new RPS game
-    /// @param encryptedPick your encoded pick for RPS game
+    /// Создать игру
+    /// @param encryptedPick зашифрованный выбор
     /// @dev 
     function createGame(bytes32 encryptedPick) public payable {
         require(msg.value >= 1 szabo, "deposit must be greater than the 1 szabo");
@@ -77,8 +77,8 @@ contract RockPaperScissors {
         );
     }
 
-    /// Join to existing game
-    /// @param _gameId game identificator for search
+    /// Присоедениться к текущей игре
+    /// @param _gameId идентификатор игры
     /// @param encryptedPick your encoded pick for RPS game
     /// @dev 
     function joinGame(uint256 _gameId, bytes32 encryptedPick) public payable {
@@ -105,10 +105,10 @@ contract RockPaperScissors {
         );
     }
 
-    /// Reveal pick
-    /// @param _gameId game identificator for search
-    /// @param pickNum pick number for choose from enum `Pick`
-    /// @param seed secret code for create proof
+    /// Раскрыть свой выбор
+    /// @param _gameId идентификатор игры
+    /// @param pickNum сделанный изначально выбор
+    /// @param seed секретный код
     /// @dev 
     function revealPick(uint256 _gameId, uint256 pickNum, bytes32 seed) public {
 
@@ -137,10 +137,10 @@ contract RockPaperScissors {
 
             if (result == Result.Win) {
                 game.allowedWithdrawal[game.player1] = game.deposits[game.player1].mul(2);
-                game.winner = game.player1;
+//                game.winner = game.player1;
             } else if (result == Result.Misfire) {
                 game.allowedWithdrawal[game.player2] = game.deposits[game.player2].mul(2);
-                game.winner = game.player2;
+//                game.winner = game.player2;
             } else if (result == Result.Standoff) {
                 game.allowedWithdrawal[game.player1] = game.deposits[game.player1];
                 game.allowedWithdrawal[game.player2] = game.deposits[game.player2];
@@ -158,8 +158,8 @@ contract RockPaperScissors {
         }
     }
 
-    /// 
-    /// @param _gameId  game identificator for search
+    /// Вывести средства из игры
+    /// @param _gameId идентификатор игры
     /// @dev 
     function withdraw(uint256 _gameId) public {
 
@@ -174,8 +174,8 @@ contract RockPaperScissors {
         msg.sender.transfer(allowedAmount);
     }
 
-    /// 
-    /// @param _gameId game identificator for search
+    /// Вернуть средства из игры
+    /// @param _gameId идентификатор игры
     /// @dev 
     function rescue(uint256 _gameId) public {
 
@@ -193,31 +193,31 @@ contract RockPaperScissors {
         msg.sender.transfer(player1Deposit.add(player2Deposit));
     }
 
-    /// 
-    /// @param _gameId game identificator for search
-    /// @param playerAddress player's address for check allowed withdrawl amount 
+    /// Доступный баланс для снятия
+    /// @param _gameId идентификатор игры
+    /// @param playerAddress адрес игрока
     /// @dev 
-    /// @return amount
+    /// @return кол-во денег доступных для снятия
     function getAllowedWithdrawalAmount(uint256 _gameId, address playerAddress) public view returns (uint256) {
         Game storage game = games[_gameId];
         return game.allowedWithdrawal[playerAddress];
     }
 
-    /// 
-    /// @param _gameId game identificator for search
-    /// @param playerAddress player's address for check his deposit amount 
+    /// Узнать депозит по игре
+    /// @param _gameId идентификатор игры
+    /// @param playerAddress адрес игрока
     /// @dev 
-    /// @return amount
+    /// @return стоимость депозита
     function depositOf(uint _gameId, address playerAddress) public view returns (uint256) {
         Game storage game = games[_gameId];
         return game.deposits[playerAddress];
     }
 
-    /// 
-    /// @param pick1 player1's pick
-    /// @param pick2  player1's pick
+    /// Решение о выигрыше
+    /// @param pick1 выбор игрока 1
+    /// @param pick2  выбор игрока 2
     /// @dev 
-    /// @return result of tournament
+    /// @return резлльтат игры
     function resolution(Pick pick1, Pick pick2) public pure returns (Result) {
 
         if (pick1 == pick2) {
@@ -239,10 +239,10 @@ contract RockPaperScissors {
         }
     }
 
-    /// 
-    /// @param game cuttent game
+    /// Доступен ли возврат средств
+    /// @param game проверяемая игра
     /// @dev 
-    /// @return result
+    /// @return можно ли вернуть деньги
     function isAllowedToRescueAtCreated(Game storage game) private view returns (bool) {
 
         return game.stage == GameStage.Created &&
@@ -251,10 +251,10 @@ contract RockPaperScissors {
         timeIsOver(game.endtimeForJoin);
     }
 
-    /// 
-    /// @param game current game
+    /// Доступен ли возврат средств
+    /// @param game проверяемая игра
     /// @dev 
-    /// @return result
+    /// @return можно ли вернуть деньги
     function isAllowedToRescueAtStarted(Game storage game) private view returns (bool) {
         return game.stage == GameStage.Started &&
         isRevealed(game, msg.sender) &&
@@ -263,19 +263,21 @@ contract RockPaperScissors {
         timeIsOver(game.endtimeForReveal);
     }
 
+    /// Время закончилось
     function timeIsOver(uint256 time) private view returns (bool) {
         return block.timestamp > time;
     }
 
+    /// Время не закончилось
     function timeIsntOver(uint256 time) private view returns (bool) {
         return !timeIsOver(time);
     }
 
-    ///
-    /// @param game current game
-    /// @param playerAddress address of player
+    /// Выбор раскрыт?
+    /// @param game текущая игра
+    /// @param playerAddress адрес игрока
     /// @dev 
-    /// @return 
+    /// @return сделал ли пользователь выбор?
     function isRevealed(Game memory game, address playerAddress) private pure returns (bool) {
         require(playerAddress == game.player1 || playerAddress == game.player2, "Unknown player");
 
@@ -286,26 +288,26 @@ contract RockPaperScissors {
         }
     }
 
-    /// 
-    /// @param game game
-    /// @param sender address transaction sender
+    /// Доступ только для участников
+    /// @param game проверяемая игра
+    /// @param sender адрес отправителя
     /// @dev 
     function accessOnlyForParticipants(Game memory game, address sender) private pure {
         require(sender == game.player1 || sender == game.player2, "forbidden");
     }
 
-    /// 
-    /// @param game game
-    /// @param stage  game stage
+    /// Корректна ли стадия игры?
+    /// @param game проверяемая игра
+    /// @param stage стадия игры
     /// @dev 
     function gameStageCorrect(Game memory game, GameStage stage) private pure {
         require(game.stage == stage, "Stage is invalid");
     }
 
-    /// 
-    /// @param pickNum player choice in Integer format 
+    /// Из числа в перечисление
+    /// @param pickNum выбор ввиде числа
     /// @dev 
-    /// @return pick
+    /// @return возврат в видел перечисления
     function numToPick(uint256 pickNum) private pure returns (Pick) {
         Pick pick = Pick(pickNum);
         require(pick == Pick.Rock || pick == Pick.Paper || pick == Pick.Scissors, "Invalid value");
@@ -313,21 +315,27 @@ contract RockPaperScissors {
         return pick;
     }
 
-    /// 
-    /// @param pickNum  player choice in Integer format
-    /// @param seed secret code for encrypt
+    /// Шифрование выбора
+    /// @param pickNum выбранный вариант
+    /// @param seed секретный код для шифрования
     /// @dev 
-    /// @return hash of pickNum and seed
+    /// @return возвращаемый хэщ
     function encryptedPick(uint256 pickNum, bytes32 seed) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(pickNum, seed));
     }
 
+    /// Получить индентифкатор последней по счету игры
+    /// retrun идентификатор игры
     function getCurrentGame() public view returns (uint256) {
         return gameId;
     }
 
     // function getGameInfo() public view returns () {}
 
+    /// Получить победителя по конкретной игре
+    /// @param _gameId идентификатор игры
+    /// @dev
+    /// return
     function getWinnerByGameId(uint256 _gameId) public view returns (address) {
         Game memory game = games[_gameId];
 
