@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import StartGame from "../MainBody/modals/StartGame";
 
 export default class Header extends Component {
 
@@ -13,6 +14,7 @@ export default class Header extends Component {
                         <a href="#" className="navbar-brand d-flex align-items-center">
                             <strong>Rock–paper–scissors</strong>
                         </a>
+
                     </div>
                 </div>
             </header>

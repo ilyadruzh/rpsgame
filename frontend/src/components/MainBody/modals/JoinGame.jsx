@@ -1,10 +1,7 @@
-import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Input } from 'reactstrap';
-import React, { Component } from 'react';
-import { hexToNumberString, soliditySha3, asciiToHex } from "web3-utils";
-import axios from "axios";
-import web3 from 'web3';
-import randomBytes from 'randombytes'
-
+import {Button, Modal, ModalHeader, ModalBody, ModalFooter, Input} from 'reactstrap';
+import React, {Component} from 'react';
+import { soliditySha3, asciiToHex} from "web3-utils";
+import './Loading.css';
 
 class JoinGame extends Component {
 
@@ -14,14 +11,15 @@ class JoinGame extends Component {
             pick: '',
             secret: '',
             encyptedPick: '',
-            modal: false
+            modal: false,
+            isLoading: false
         }
     }
 
     handleChange = (e) => {
         this.setState({
             [e.target.name]: e.target.value
-        }, () => console.log(this.state))
+        })
     };
 
     toggle = () => {
@@ -31,21 +29,30 @@ class JoinGame extends Component {
     };
 
     handleJoinGameClick = () => {
-        const { instance, gameReady } = this.props;
-        const { pick, secret } = this.state;
+        const {instance, gameReady, gameId} = this.props;
+        const {pick, secret} = this.state;
 
-        const seed = soliditySha3({ type: 'bytes32', value: asciiToHex(secret) });
-        const encryptedPick = soliditySha3({ type: 'uint', value: pick }, { type: 'bytes32', value: seed });
+        const seed = soliditySha3({type: 'bytes32', value: asciiToHex(secret)});
+        const encryptedPick = soliditySha3({type: 'uint', value: pick}, {type: 'bytes32', value: seed});
+
+        this.setState({ isLoading: true });
 
         instance.methods
-            .joinGame(encryptedPick)
-            .send({ from: window.localStorage.getItem("current_eth_address"), value: 2000000000000000 })
+            .joinGame(gameId, encryptedPick)
+            .send({from: window.localStorage.getItem("current_eth_address"), value: 2000000000000000})
             .then(result => {
-                console.log("result: ", result);
-                gameReady()
+                gameReady();
+                this.setState(prevState => ({
+                    modal: !prevState.modal,
+                    isLoading: false
+                }));
             })
             .catch(error => {
-                console.log("error: ", error)
+                console.log("error: ", error);
+                this.setState(prevState => ({
+                    modal: !prevState.modal,
+                    isLoading: false
+                }));
             })
     };
 
@@ -53,20 +60,24 @@ class JoinGame extends Component {
         return (
 
             <React.Fragment>
-                <Button outline color="primary" onClick={this.toggle} disabled={this.props.disabled}>Join to Game</Button>
+                <Button outline color="primary" onClick={this.toggle} disabled={this.props.disabled}>Join to
+                    Game</Button>
 
                 <Modal isOpen={this.state.modal} toggle={this.toggle}>
+
+                    { (this.state.isLoading) ? <div className="loading"></div> : ''  }
+
                     <ModalHeader toggle={this.toggle}>Add proof for raise money!</ModalHeader>
 
                     <ModalBody>
                         <div>Description body Description body Description body Description body</div>
                         <div className="d-flex align-items-baseline">
-                            <div className="col-4">Secret code: </div>
-                            <Input type="text" name="secret" id="secret" onChange={(e) => this.handleChange(e)} />
+                            <div className="col-4">Secret code:</div>
+                            <Input type="text" name="secret" id="secret" onChange={(e) => this.handleChange(e)}/>
                         </div>
                         {' '}
                         <div className="d-flex align-items-baseline">
-                            <div className="col-4">Your choice: </div>
+                            <div className="col-4">Your choice:</div>
                             <Input type="select" name="pick" id="pick" onChange={(e) => this.handleChange(e)}>
                                 <option name="null" value="0"></option>
                                 <option name="rock" value="1">Rock</option>

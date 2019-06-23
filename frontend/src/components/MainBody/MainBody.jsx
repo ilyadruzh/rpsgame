@@ -12,84 +12,127 @@ class MainBody extends Component {
         super(props);
 
         this.state = {
-            contractAddress: '',
+            contractAddress: window.localStorage.getItem("gameContract"),
             gameInstance: '',
             gameId: '',
             gameStarted: false,
             gameAceptingWithdrawal: false,
             winner: '',
+            currentGame: '',
+            isLoading: false,
+            isPlayer1Revealed: false,
+            isPlayer2Revealed: false,
             games: []
         };
     }
 
     componentDidMount() {
         this.initGameContractInstance();
+        console.log("state: ", this.state)
     }
 
     initGameContractInstance = () => {
 
         const instance = new Web3(window.ethereum).eth.Contract(gameAbi, this.state.contractAddress);
 
-        console.log("instance: ", instance)
-
         this.setState({
             gameInstance: instance
-        }, () => this.getCurrentGame());
+        });
     };
 
-    getCurrentGame = () => {
+    getCurrentActiveGame = () => {
 
         const {gameInstance} = this.state;
 
         gameInstance.methods
             .getCurrentGame()
-            .call({from: window.localStorage.getItem("current_eth_address"), value: 2000000000000000})
+            .call({from: window.localStorage.getItem("current_eth_address")})
             .then(result => {
-                console.log("result: ", result);
-                // TODO: setState gameId
+                this.setState({
+                    currentGame: result["_hex"],
+                    gameStarted: true
+                }, () => console.log("currentGame: ", this.state.currentGame))
+
             })
             .catch(error => {
                 console.log("error: ", error)
             })
-    }
+    };
 
     handleContractAddressChange = (e) => {
         this.setState({
             contractAddress: e.target.value
-        }, () => this.initGameContractInstance())
+        }, () => {
+            this.initGameContractInstance();
+            window.localStorage.setItem("gameContract", this.state.contractAddress);
+        })
     };
 
     gameCreated = (game) => {
-        console.log("game: ", game);
-
         this.setState({
             gameStarted: true
-        })
+        }, () => this.getCurrentActiveGame())
     };
 
     gameReadyToWithdrawal = () => {
 
-        console.log("gameReadyToWithdrawal");
-
         this.setState({
             gameAceptingWithdrawal: true
-        })
+        }, () => console.log(this.state))
+    };
+
+    playerRevealedPick = (player) => {
+
+        console.log("player:", player);
+
+        let playerNum = (player == "Player 1") ? "isPlayer1Revealed" : "isPlayer2Revealed";
+
+        this.setState({
+            [playerNum] : true
+        }, () => this.resolution())
+
+    };
+
+    resolution = () => {
+        const {gameInstance} = this.state;
+
+        gameInstance.methods
+            .getWinnerByGameId(this.state.currentGame)
+            .call({from: window.localStorage.getItem("current_eth_address")})
+            .then(result => {
+                console.log("winner: ", result);
+            })
+            .catch(error => {
+                console.log("error: ", error)
+            })
     };
 
     renderGameInfo = () => {
         return (
-            <Col md={4}>
+            <Col md="auto">
                 <div className="card mb-4 shadow-sm">
-                    <img src="img/rockpaper.jpg" />
+                    <img src="img/rockpaper.jpg"/>
                     <div className="card-body">
                         <p className="card-text">Теперь вы можете проверить свои ходы</p>
                         <div className="d-flex justify-content-between align-items-center">
                             <div className="btn-group">
-                                <RevealPick label="Player 1" />
+                                <RevealPick
+                                    label="Player 1"
+                                    instance={this.state.gameInstance}
+                                    gameId={this.state.currentGame}
+                                    disabled={(this.state.isPlayer1Revealed) ? true : false}
+                                    playerRevealedPick={(player) => this.playerRevealedPick(player)}
+                                />
                             </div>
 
                             <div className="btn-group">
-                                <RevealPick label="Player 2" />
+                                <RevealPick
+                                    label="Player 2"
+                                    instance={this.state.gameInstance}
+                                    gameId={this.state.currentGame}
+                                    disabled={(this.state.isPlayer2Revealed) ? true : false}
+                                    playerRevealedPick={(player) => this.playerRevealedPick(player)}
+                                />
                             </div>
                             <small className="text-muted">Winner: {this.state.winner}</small>
                         </div>
@@ -122,45 +165,53 @@ class MainBody extends Component {
                                 <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
                             </InputGroup.Prepend>
                             <FormControl
-                                placeholder="Smart Contract Address"
+                                placeholder={this.state.contractAddress}
                                 aria-label="Smart Contract Address"
                                 aria-describedby="basic-addon1"
                                 onChange={(e) => this.handleContractAddressChange(e)}
+
                             />
                         </InputGroup>
 
-                        <p>
-                            <StartGame
-                                instance={this.state.gameInstance}
-                                disabled={(this.state.contractAddress != "" && this.state.gameStarted == false) ? false : true}
-                                gameStarted={(game) => this.gameCreated(game)}
-                            />
-                        </p>
+                        <Row className="justify-content-md-center">
+                            <Col xs lg="2"></Col>
+                            <Col md="auto">
+                                <StartGame
+                                    label="Start Game"
+                                    instance={this.state.gameInstance}
+                                    disabled={(this.state.contractAddress != "" && !this.state.gameStarted) ? false : true}
+                                    gameStarted={(game) => this.gameCreated(game)}
+                                />
 
-                        {
-                            (this.state.gameStarted) ?
-                                (<p>
+                                {' '}
 
+                                {
+                                    (this.state.gameStarted === true) ? (
                                     <JoinGame
                                         instance={this.state.gameInstance}
-                                        gameId={this.state.gameId}
+                                        gameId={this.state.currentGame}
+                                        disabled={(this.state.gameAceptingWithdrawal) ? true : false}
                                         gameReady={() => this.gameReadyToWithdrawal()}
-                                    />
+                                    />) : ''
+                                }
 
-                                </p>) : ''
-                        }
+                            </Col>
+                            <Col xs lg="2"></Col>
+                        </Row>
                     </div>
                 </section>
 
                 {
-                    (this.state.gameStarted) ? (
+                    (this.state.gameAceptingWithdrawal) ? (
                         <div className="album py-5 bg-light">
-                            <Container className="container">
+                            <Container>
 
-                                <Row className="row">
-                                    {
-                                        this.renderGameInfo()
-                                    }
+                                <Row className="justify-content-md-center">
+                                    <Col xs lg="2"></Col>
+
+                                    {this.renderGameInfo()}
+
+                                    <Col xs lg="2"></Col>
                                 </Row>
                             </Container>
                         </div>

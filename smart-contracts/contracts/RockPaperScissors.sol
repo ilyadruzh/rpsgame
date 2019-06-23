@@ -13,6 +13,7 @@ contract RockPaperScissors {
         GameStage stage;
         address player1;
         address player2;
+        address winner;
 
         bytes32 player1EncryptedPick;
         bytes32 player2EncryptedPick;
@@ -23,8 +24,8 @@ contract RockPaperScissors {
         bytes32 player1Seed;
         bytes32 player2Seed;
 
-        mapping (address => uint256) deposits;
-        mapping (address => uint256) allowedWithdrawal;
+        mapping(address => uint256) deposits;
+        mapping(address => uint256) allowedWithdrawal;
 
         uint256 endtimeForJoin;
         uint256 endtimeForReveal;
@@ -37,17 +38,17 @@ contract RockPaperScissors {
         AllowedForWithdrawal,
         Ended
     }
-    enum Pick { Null, Rock, Paper, Scissors }
-    enum Result { Null, Standoff, Win, Misfire }
+    enum Pick {Null, Rock, Paper, Scissors}
+    enum Result {Null, Standoff, Win, Misfire}
 
-    mapping (uint256 => Game) public games;
+    mapping(uint256 => Game) public games;
 
     event Created(uint256 gameId, address player1, uint256 deposit, uint256 endtimeForJoin);
     event Started(uint256 gameId, address player1, address player2, uint256 deposit, uint256 endtimeForReveal);
     event AcceptedWithdrawal(
-        uint256 gameId, 
-        address player1, 
-        address player2, 
+        uint256 gameId,
+        address player1,
+        address player2,
         uint256 player1AllowedWithdrawal,
         uint256 player2AllowedWithdrawal
     );
@@ -131,15 +132,20 @@ contract RockPaperScissors {
         }
 
         if (game.player1DecryptedPick != Pick.Null && game.player2DecryptedPick != Pick.Null) {
+
             Result result = resolution(game.player1DecryptedPick, game.player2DecryptedPick);
+
             if (result == Result.Win) {
                 game.allowedWithdrawal[game.player1] = game.deposits[game.player1].mul(2);
+                game.winner = game.player1;
             } else if (result == Result.Misfire) {
                 game.allowedWithdrawal[game.player2] = game.deposits[game.player2].mul(2);
+                game.winner = game.player2;
             } else if (result == Result.Standoff) {
                 game.allowedWithdrawal[game.player1] = game.deposits[game.player1];
                 game.allowedWithdrawal[game.player2] = game.deposits[game.player2];
             }
+
             game.stage = GameStage.AllowedForWithdrawal;
 
             emit AcceptedWithdrawal(
@@ -213,19 +219,19 @@ contract RockPaperScissors {
     /// @dev 
     /// @return result of tournament
     function resolution(Pick pick1, Pick pick2) public pure returns (Result) {
-        
+
         if (pick1 == pick2) {
             return Result.Standoff;
         } else if (
-         (pick1 == Pick.Rock && pick2 == Pick.Scissors) ||
-         (pick1 == Pick.Paper && pick2 == Pick.Rock) ||
-         (pick1 == Pick.Scissors && pick2 == Pick.Paper)
+            (pick1 == Pick.Rock && pick2 == Pick.Scissors) ||
+            (pick1 == Pick.Paper && pick2 == Pick.Rock) ||
+            (pick1 == Pick.Scissors && pick2 == Pick.Paper)
         ) {
             return Result.Win;
         } else if (
-         (pick1 == Pick.Rock && pick2 == Pick.Paper) ||
-         (pick1 == Pick.Paper && pick2 == Pick.Scissors) ||
-         (pick1 == Pick.Scissors && pick2 == Pick.Rock)
+            (pick1 == Pick.Rock && pick2 == Pick.Paper) ||
+            (pick1 == Pick.Paper && pick2 == Pick.Scissors) ||
+            (pick1 == Pick.Scissors && pick2 == Pick.Rock)
         ) {
             return Result.Misfire;
         } else {
@@ -237,8 +243,8 @@ contract RockPaperScissors {
     /// @param game cuttent game
     /// @dev 
     /// @return result
-    function isAllowedToRescueAtCreated(Game storage game) private view returns(bool) {
-        
+    function isAllowedToRescueAtCreated(Game storage game) private view returns (bool) {
+
         return game.stage == GameStage.Created &&
         msg.sender == game.player1 &&
         game.deposits[game.player1] != 0 &&
@@ -249,7 +255,7 @@ contract RockPaperScissors {
     /// @param game current game
     /// @dev 
     /// @return result
-    function isAllowedToRescueAtStarted(Game storage game) private view returns(bool) {
+    function isAllowedToRescueAtStarted(Game storage game) private view returns (bool) {
         return game.stage == GameStage.Started &&
         isRevealed(game, msg.sender) &&
         game.deposits[game.player1] != 0 &&
@@ -257,11 +263,11 @@ contract RockPaperScissors {
         timeIsOver(game.endtimeForReveal);
     }
 
-    function timeIsOver(uint256 time) private view returns(bool) {
+    function timeIsOver(uint256 time) private view returns (bool) {
         return block.timestamp > time;
     }
 
-    function timeIsntOver(uint256 time) private view returns(bool) {
+    function timeIsntOver(uint256 time) private view returns (bool) {
         return !timeIsOver(time);
     }
 
@@ -318,6 +324,14 @@ contract RockPaperScissors {
 
     function getCurrentGame() public view returns (uint256) {
         return gameId;
+    }
+
+    // function getGameInfo() public view returns () {}
+
+    function getWinnerByGameId(uint256 _gameId) public view returns (address) {
+        Game memory game = games[_gameId];
+
+        return game.winner;
     }
 
     function() external payable {}

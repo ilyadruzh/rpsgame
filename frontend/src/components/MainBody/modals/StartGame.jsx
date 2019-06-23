@@ -1,9 +1,7 @@
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Input } from 'reactstrap';
 import React, { Component } from 'react';
-import { hexToNumberString, soliditySha3, asciiToHex } from "web3-utils";
-import axios from "axios";
-import web3 from 'web3';
-import randomBytes from 'randombytes'
+import { soliditySha3, asciiToHex } from "web3-utils";
+import './Loading.css';
 
 
 class StartGame extends Component {
@@ -14,14 +12,15 @@ class StartGame extends Component {
             pick: '',
             secret: '',
             encyptedPick: '',
-            modal: false
+            modal: false,
+            isLoading: false
         }
     }
 
     handleChange = (e) => {
         this.setState({
             [e.target.name]: e.target.value
-        }, () => console.log(this.state))
+        })
     };
 
     toggle = () => {
@@ -37,15 +36,25 @@ class StartGame extends Component {
         const seed = soliditySha3({ type: 'bytes32', value: asciiToHex(secret) });
         const encryptedPick = soliditySha3({ type: 'uint', value: pick }, { type: 'bytes32', value: seed });
 
+        this.setState({ isLoading: true });
+
         instance.methods
             .createGame(encryptedPick)
             .send({ from: window.localStorage.getItem("current_eth_address"), value: 2000000000000000 })
             .then(result => {
                 console.log("result: ", result);
-                gameStarted("created")
+                gameStarted("created");
+                this.setState(prevState => ({
+                    isLoading: false,
+                    modal: !prevState.modal
+                }));
             })
             .catch(error => {
-                console.log("error: ", error)
+                console.log("error: ", error);
+                this.setState(prevState => ({
+                    isLoading: false,
+                    modal: !prevState.modal
+                }));
             })
     };
 
@@ -53,9 +62,14 @@ class StartGame extends Component {
         return (
 
             <React.Fragment>
-                <Button outline color="primary" onClick={this.toggle} disabled={this.props.disabled}>Start Game</Button>
+
+
+                <Button outline color="primary" onClick={this.toggle} disabled={this.props.disabled}>{this.props.label}</Button>
 
                 <Modal isOpen={this.state.modal} toggle={this.toggle}>
+
+                    { (this.state.isLoading) ? <div className="loading"></div> : ''  }
+
                     <ModalHeader toggle={this.toggle}>Add proof for raise money!</ModalHeader>
 
                     <ModalBody>

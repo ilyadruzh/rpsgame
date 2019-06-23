@@ -3,7 +3,9 @@ import React, {Component} from 'react';
 import {hexToNumberString, soliditySha3, asciiToHex} from "web3-utils";
 import axios from "axios";
 import web3 from 'web3';
-import randomBytes from 'randombytes'
+import randomBytes from 'randombytes';
+import './Loading.css';
+
 
 
 class RevealPick extends Component {
@@ -14,7 +16,8 @@ class RevealPick extends Component {
             pick: '',
             secret: '',
             encyptedPick: '',
-            modal: false
+            modal: false,
+            isLoading: false
         }
     }
 
@@ -31,21 +34,33 @@ class RevealPick extends Component {
     };
 
     handleRevealPickClick = () => {
-        const {instance, gameReady} = this.props;
+        const {label, gameId, instance, playerRevealedPick} = this.props;
         const {pick, secret} = this.state;
 
         const seed = soliditySha3({type: 'bytes32', value: asciiToHex(secret)});
         const encryptedPick = soliditySha3({type: 'uint', value: pick}, {type: 'bytes32', value: seed});
 
+        this.setState({ isLoading: true });
+
         instance.methods
-            .revealPick("gameId", "pickInt", "seed")
+            .revealPick(gameId, pick, secret)
             .send({from: window.localStorage.getItem("current_eth_address"), value: 2000000000000000})
             .then(result => {
                 console.log("result: ", result);
-                gameReady()
+                playerRevealedPick(label);
+
+                this.setState(prevState => ({
+                    isLoading: false,
+                    modal: !prevState.modal
+                }));
+
             })
             .catch(error => {
-                console.log("error: ", error)
+                console.log("error: ", error);
+                this.setState(prevState => ({
+                    isLoading: false,
+                    modal: !prevState.modal
+                }));
             })
     };
 
@@ -57,6 +72,9 @@ class RevealPick extends Component {
                         disabled={this.props.disabled}>{this.props.label}</Button>
 
                 <Modal isOpen={this.state.modal} toggle={this.toggle}>
+
+                    { (this.state.isLoading) ? <div className="loading"></div> : ''  }
+
                     <ModalHeader toggle={this.toggle}>Add proof for raise money!</ModalHeader>
 
                     <ModalBody>
