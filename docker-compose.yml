@@ -1,0 +1,53 @@
+version: '3.2'
+services:
+  rpsgame-front:
+    image: rpsgame-front:latest
+    volumes:
+      - ./frontend/nginx:/etc/nginx/conf.d:ro
+    ports:
+      - 9080:80
+    restart: always
+  rpsgame-geth:
+    image: rpsgame-geth:latest
+    ports:
+      - 30303:30303
+      - 8545:8545
+    volumes:
+        - ./nodes/geth-node/cfg/keystore:/opt/node/keystore
+        - ./nodes/geth-node/cfg/password.txt:/opt/node/cfg/password.txt
+        - ./nodes/geth-node/start.sh:/opt/start.sh
+    entrypoint: ["sh","/opt/start.sh"]
+    command: [
+      "--datadir=/opt/node/cfg",
+      "--syncmode=full",
+      "--nodiscover",
+      "--verbosity=3",
+      "--rpc",
+      "--rpcaddr=0.0.0.0",
+      "--networkid=24176",
+      "--rpcport=8545",
+      "--port=30303",
+      "--rpcapi=eth,net,web3,personal,debug",
+      "--rpccorsdomain=*",
+      "--etherbase=0x1e646e9a502f7653bdcede380c2721536c379489",
+      "--mine",
+      "--unlock=0x1e646e9a502f7653bdcede380c2721536c379489",
+      "--password=/opt/node/cfg/password.txt",
+      "--nat=none",
+      "--rpcvhosts=*",
+    ]
+    restart: always
+    networks:
+      - default
+  rpsgame-sc:
+    image: rpsgame-sc:latest
+    volumes:
+      - ./smart-contracts/deploy.sh:/opt/deploy.sh
+    depends_on:
+      - rpsgame-geth
+    command: ["/opt/deploy.sh"]
+    networks:
+      - default
+
+networks:
+  default:

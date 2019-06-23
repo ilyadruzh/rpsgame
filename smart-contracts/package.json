@@ -1,0 +1,31 @@
+{
+  "name": "rpsgame-smart-contracts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/krondev/rpsgame.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/krondev/rpsgame/issues"
+  },
+  "homepage": "https://github.com/krondev/rpsgame",
+  "dependencies": {
+    "openzeppelin-solidity": "^2.3.0"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "coveralls": "^3.0.4",
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.17.3",
+    "ganache-cli": "^6.4.3",
+    "openzeppelin-test-helpers": "^0.4.0",
+    "solidity-coverage": "^0.5.11",
+    "truffle": "^5.0.19",
+    "truffle-assertions": "^0.9.0"
+  }
+}
