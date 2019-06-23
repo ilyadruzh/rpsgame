@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-rm -rf build
-npm install
-
 SCRIPTS_PATH=$(readlink -e `dirname $0`)
 PROJECT_ROOT_PATH=$(readlink -e $SCRIPTS_PATH/../)
 
@@ -36,6 +33,3 @@ for CONTRACT_PATH in RockPaperScissors
 do
     compile_contract $CONTRACT_PATH
 done
-
-rm -rf build
-

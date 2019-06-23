@@ -22,6 +22,5 @@ docker build -t rpsgame-sc .
 # docker build -t rpsgame-substrate-module .
 
 # run docker-compose
-docker-compose build --no-cache
 docker-compose up -d
 
