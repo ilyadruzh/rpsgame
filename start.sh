@@ -1,26 +1,24 @@
 #!/usr/bin/env bash
 
-# stop docker-compose
+# Stop docker-compose
 docker-compose down --remove-orphans
 
-# Create Distr Front
+# Build Front
 cd frontend
 npm install && npm run build
 docker build -t rpsgame-front .
 
-# Create Distr Geth
+# Build Geth
 cd ../nodes/geth-node
 docker build -t rpsgame-geth .
 
-# Create Distr SC
+# Build SC
 cd ../../smart-contracts
 ./sc-artifacts.sh
 docker build -t rpsgame-sc .
 
 # Create Substarte Module
-# cd ././substrate/
-# docker build -t rpsgame-substrate-module .
 
-# run docker-compose
+# Start docker-compose
 docker-compose up -d
 

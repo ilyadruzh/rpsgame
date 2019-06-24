@@ -13,7 +13,6 @@ contract RockPaperScissors {
         GameStage stage;
         address player1;
         address player2;
-        address winner;
 
         bytes32 player1EncryptedPick;
         bytes32 player2EncryptedPick;
@@ -137,10 +136,8 @@ contract RockPaperScissors {
 
             if (result == Result.Win) {
                 game.allowedWithdrawal[game.player1] = game.deposits[game.player1].mul(2);
-//                game.winner = game.player1;
             } else if (result == Result.Misfire) {
                 game.allowedWithdrawal[game.player2] = game.deposits[game.player2].mul(2);
-//                game.winner = game.player2;
             } else if (result == Result.Standoff) {
                 game.allowedWithdrawal[game.player1] = game.deposits[game.player1];
                 game.allowedWithdrawal[game.player2] = game.deposits[game.player2];
@@ -332,15 +329,11 @@ contract RockPaperScissors {
 
     // function getGameInfo() public view returns () {}
 
-    /// Получить победителя по конкретной игре
-    /// @param _gameId идентификатор игры
-    /// @dev
-    /// return
-    function getWinnerByGameId(uint256 _gameId) public view returns (address) {
-        Game memory game = games[_gameId];
+    // function getWinnerByGameId(uint256 _gameId) public view returns (address) {
+    //     Game memory game = games[_gameId];
 
-        return game.winner;
-    }
+    //     return game.winner;
+    // }
 
     function() external payable {}
 }

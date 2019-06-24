@@ -28,7 +28,7 @@ class MainBody extends Component {
 
     componentDidMount() {
         this.initGameContractInstance();
-        console.log("state: ", this.state)
+        ("state: ", this.state)
     }
 
     initGameContractInstance = () => {
